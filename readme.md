@@ -1,5 +1,5 @@
 #gDriveMover
-The purpose of gDriveMover is to help you move your Google Drive-Data from one Google account to an other.
+gDriveMover helps you to move your Google Drive-Data from one Google account to an other.
 
 Imagine you started using Google Drive, before your company even knew what the Google Apps Platform means for their business.
 Now it is the time to move on and make the switch to your company Google account, taking all your existing documents with you.
@@ -21,6 +21,10 @@ This is your shiny new corporate account. Let us name it <firstname.lastname@coo
 	* authorize accounts (source, target)
 	* listFilesFolders
 	* createFolders
+	* moveFolders
+	* copyFiles
+	* copyFilesTarget
+* _source_: delete source-folder
 * _target_: unshare folder
 
 ##Prerequisites
