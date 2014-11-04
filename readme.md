@@ -4,19 +4,13 @@ gDriveMover helps you to move your Google Drive-Data from one Google account to 
 Imagine you started using Google Drive, before your company even knew what the Google Apps Platform means for their business.
 Now it is the time to move on and make the switch to your company Google account, taking all your existing documents with you.
 
-###Source
-This is your old account. Let us name it <checker86@gmail.com>.
-
-###Target
-This is your shiny new corporate account. Let us name it <firstname.lastname@cool-company.com>.
-
 ##Process
 * _source_: check domain sharing settings (make outside sharing possible)
 * _source/target_: make sure enough free space is available
 * _source_: create a folder (e.g. _Source)
 	* share this folder with your target-account (Can edit)
 * _target_: create a folder (e.g. _Target)
-* Register a Google Drive API Client in Developer Console
+* [Register a Google Drive API Client in Developer Console](https://github.com/jalmeroth/gDriveMover/wiki/API_Client)
 	* create config file (gDrive.json)
 * run ./gDriveMover
 	* authorize accounts (source, target)
@@ -44,3 +38,6 @@ All flavours of [Google Apps](https://support.google.com/a/answer/175121) are su
 * Google Apps Unlimited (includes Google Apps for Education)
 * Google Apps for Work (includes special editions for nonprofits and government agencies)
 * Legacy free edition of Google Apps (no longer available to new customers)
+
+###Questions or need some help?
+Send me an e-mail to: <gDriveMover@almeroth.com>.
