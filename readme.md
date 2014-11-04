@@ -23,9 +23,9 @@ This is your shiny new corporate account. Let us name it <firstname.lastname@coo
 	* listFilesFolders
 	* createFolders
 	* moveFolders
-	* copyFiles
+	* copyFilesSource
 	* copyFilesTarget
-* _source_: delete source-folder including all copied files
+* _source_: delete source-folder including all files
 
 ##Prerequisites
 * [Python Requests: HTTP for Humans](http://docs.python-requests.org/en/latest/user/install/#install)
