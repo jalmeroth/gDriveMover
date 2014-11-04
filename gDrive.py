@@ -3,7 +3,9 @@ import os
 import json
 import requests
 import urllib
-
+import Queue
+import time
+from urlRequest import URLRequestThread
 
 class gDrive(object):
 	"""docstring for gDrive"""
@@ -12,7 +14,7 @@ class gDrive(object):
 		self.user_id = user_id
 		self.file_name = 'gDrive.json'
 		self.prefs = self._settings
-		self.bear = self.refresh()
+		self.beer = self.refresh()
 	
 	def authorize(self):
 		"""docstring for authorize"""
@@ -89,6 +91,37 @@ class gDrive(object):
 			return data.get('access_token', None)
 		else:
 			return self.authorize()
+			
+	def tokenInfo(self, token):
+		"""docstring for tokenInfo"""
+		token_info = self.prefs.get("token_info", "https://www.googleapis.com/oauth2/v1/tokeninfo")
+		
+		params = {
+			"access_token": token
+		}
+		
+		r = requests.get(token_info, params=params)
+		
+		if r.status_code == requests.codes.ok:
+			return r.json()
+
+	@property
+	def beer(self):
+		if hasattr(self, '_beerDead'):
+			timeNow = int(time.time())
+			if(self._beerDead > timeNow):
+				# print "Giving beer"
+				return self._beer
+		
+	@beer.setter
+	def beer(self, token):
+		# print "Receiving beer"
+		self._beer = token
+		fiveMin = 5 * 60
+		expires_in = int(self.tokenInfo(token).get('expires_in'))
+		timeNow = int(time.time())
+		self._beerDead = timeNow + expires_in - fiveMin
+		# print self._beerDead
 
 	@property
 	def _settings(self):
@@ -108,14 +141,15 @@ class gDrive(object):
 		with open(_work_dir() + os.sep + self.file_name, 'w+') as preferences:
 			json.dump(prefs, preferences)
 	
-	def searchFiles(self, corpus="DEFAULT", token = None, q = None, fields = None):
+	def searchFiles(self, token = None, q = None, fields = None):
 		"""docstring for searchFiles"""
 		
+		maxResults = 1000
+		
 		if token:
-			print token
+			print "Fetching next", maxResults, "items with token", token
 		
 		if q == None:
-			# q = "mimeType != 'application/vnd.google-apps.folder' AND trashed != true"
 			q = "mimeType != 'application/vnd.google-apps.folder' AND trashed != true"
 			
 		if fields == None:
@@ -123,19 +157,19 @@ class gDrive(object):
 			
 		url = 'https://www.googleapis.com/drive/v2/files'
 		
-		if not self.bear:
-			self.bear = self.refresh()
+		if not self.beer:
+			self.beer = self.refresh()
 
-		# print "Bear:", self.bear
+		# print "beer:", self.beer
 	
 		headers = {
-			"Authorization": "Bearer " + self.bear
+			"Authorization": "Bearer " + self.beer
 		}
 	
-		# "corpus": corpus,
 		params = {
 			"pageToken": token,
 			"q": q,
+			"maxResults": maxResults,
 			"fields": fields
 		}
 
@@ -147,7 +181,7 @@ class gDrive(object):
 		else:
 			r.raise_for_status()
 		
-	def retrieve_all_files(self):
+	def retrieve_all_files(self, q = None):
 		"""docstring for retrieve_all_files"""
 		
 		token = None
@@ -155,7 +189,7 @@ class gDrive(object):
 		
 		while True:
 			
-			data = self.searchFiles(token=token)
+			data = self.searchFiles(token=token, q = q)
 			
 			token = data.get('nextPageToken', None)
 			# print "Token", token
@@ -179,9 +213,9 @@ class gDrive(object):
 		if q == None:
 			q = "mimeType = 'application/vnd.google-apps.folder' AND trashed != true"
 		
-		return self.searchFiles(q=q, token=token)
+		return self.searchFiles(token=token, q=q)
 	
-	def retrieve_all_folders(self):
+	def retrieve_all_folders(self, q = None):
 		"""docstring for retrieve_all_folders"""
 		
 		token = None
@@ -189,7 +223,7 @@ class gDrive(object):
 		
 		while True:
 			
-			data = self.searchFolders(token=token)
+			data = self.searchFolders(token=token, q=q)
 			
 			token = data.get('nextPageToken', None)
 			# print "Token", token
@@ -209,11 +243,11 @@ class gDrive(object):
 		
 		url = 'https://www.googleapis.com/drive/v2/files/' + fileId
 		
-		if not self.bear:
-			self.bear = self.refresh()
+		if not self.beer:
+			self.beer = self.refresh()
 
 		headers = {
-			"Authorization": "Bearer " + self.bear
+			"Authorization": "Bearer " + self.beer
 		}
 	
 		params = {
@@ -233,122 +267,190 @@ class gDrive(object):
 		"""docstring for getName"""
 		return self.fileGet(fileId, 'title').get('title', None)
 
-	def makeCopy(self, fileId, title = None, parents = [], fields = None):
+	def makeCopy(self, items, fields = None):
 		"""docstring for makeCopy"""
 		
-		if title == None:
-			title = self.getName(fileId)
-
 		if fields == None:
 			fields = "id,parents(id,isRoot),title"
-
+		
+		if not self.beer:
+			self.beer = self.refresh()
+		
 		params = {
-			"visibility": "PRIVATE",
 			"fields": fields
 		}
 		
-		url = "https://www.googleapis.com/drive/v2/files/" + fileId + "/copy?" + urllib.urlencode(params)
-		# print url
-		
-		if not self.bear:
-			self.bear = self.refresh()
-		# else:
-		# 	print "Bear:", self.bear
-	
 		headers = {
 			"Content-Type": "application/json",
-			"Authorization": "Bearer " + self.bear
+			"Authorization": "Bearer " + self.beer
 		}
 		# print headers
-
-		payload = {
-			"title": title,
-			"parents": parents
-		}
-		# print payload
+		threads = []
+		q = Queue.Queue()
 		
-		r = requests.post(url, headers=headers, data=json.dumps(payload))
-		
-		if r.status_code == requests.codes.ok:
-			data = r.json()
-			return data
-		else:
-			if r.status_code == 401:
-				print "Refreshing token..."
-				self.bear = self.refresh()
-			print r.status_code, r.text
-			r.raise_for_status()
+		for item in items:
+			# print item
+			fileId = item.get('fileId')
+			newFileId = item.get('newFileId')
 			
-	def updateFile(self, fileId, addParents, removeParents, fields = None):
-		"""docstring for updateFile"""
+			if newFileId:
+				copyId = newFileId
+			else:
+				copyId = fileId
+			
+			title = item.get('title')
+			parents = item.get('parents', [])
+			
+			payload = {
+				"title": title,
+				"parents": parents
+			}
+			# print payload
+			
+			url = "https://www.googleapis.com/drive/v2/files/" + copyId + "/copy?" + urllib.urlencode(params)
+			# print url
+		
+			new_thread = URLRequestThread(
+				q,
+				"POST",
+				url,
+				headers=headers,
+				data=json.dumps(payload)
+			)
+			
+			new_thread.setName(fileId)
+			threads.append(new_thread)
+			new_thread.start()
 
+		for t in threads:
+			t.join()
+		
+		result = {}
+		
+		while not q.empty():
+			
+			index, data = q.get()
+			result[index] = data
+				
+		return result
+
+	def updateFiles(self, items, fields = None):
+		"""docstring for updateFiles"""
 		if fields == None:
 			fields = "id,parents(id,isRoot),title"
 		
-		url = 'https://www.googleapis.com/drive/v2/files/' + fileId
-		
-		if not self.bear:
-			self.bear = self.refresh()
+		if not self.beer:
+			self.beer = self.refresh()
 
 		headers = {
-			"Authorization": "Bearer " + self.bear
+			"Authorization": "Bearer " + self.beer
 		}
 	
-		params = {
-			"addParents": ",".join(addParents),
-			"removeParents": ",".join(removeParents),
-			"fields": fields
-		}
-
-		r = requests.put(url, headers=headers, params=params)
+		threads = []
+		q = Queue.Queue()
 		
-		if r.status_code == requests.codes.ok:
-			data = r.json()
-			return data
-		else:
-			r.raise_for_status()
-
-	def insertFile(self, title = "Untitled", parents = [], fType = None, fields = None):
-		"""docstring for insertFile"""
-		
-		if fType == None:
-			fType = "application/vnd.google-apps.folder"
+		for item in items:
+			# print item
+			folderId = item.get('folderId')
+			newFolderId = item.get('newFolderId')
+			addParents = item.get('addParents', [])
+			removeParents = item.get('removeParents', [])
 			
+			params = {
+				"addParents": ",".join(addParents),
+				"removeParents": ",".join(removeParents),
+				"fields": fields
+			}
+			# print newFolderId
+			url = 'https://www.googleapis.com/drive/v2/files/' + newFolderId
+			
+			new_thread = URLRequestThread(
+				q,
+				"PUT",
+				url,
+				headers=headers,
+				params=params
+			)
+			
+			new_thread.setName(folderId)
+			threads.append(new_thread)
+			new_thread.start()
+
+		for t in threads:
+			t.join()
+		
+		result = {}
+		
+		while not q.empty():
+			
+			index, data = q.get()
+			result[index] = data
+				
+		return result
+
+	def insertFiles(self, items, fields = None):
+		"""docstring for insertFiles"""
+		
 		if fields == None:
 			fields = "id,parents(id,isRoot),title"
 		
 		params = {
 			"fields": fields
 		}
-		
+
 		url = "https://www.googleapis.com/drive/v2/files?" + urllib.urlencode(params)
 		# print url
-		
-		if not self.bear:
-			self.bear = self.refresh()
 
-		# print "Bear:", self.bear
-	
+		if not self.beer:
+			self.beer = self.refresh()
+
+		# print "beer:", self.beer
+
 		headers = {
 			"Content-Type": "application/json",
-			"Authorization": "Bearer " + self.bear
+			"Authorization": "Bearer " + self.beer
 		}
 		# print headers
 
-		payload = {
-		  "title": title,
-		  "parents": parents,
-		  "mimeType": fType
-		}
-		# print payload
+		threads = []
+		q = Queue.Queue()
 		
-		r = requests.post(url, headers=headers, data=json.dumps(payload))
+		for item in items:
+			itemId = item.get('id')
+			title = item.get('title', 'Untitled')
+			parents = item.get('parents', [])
+			mimeType = item.get('mimeType', 'application/vnd.google-apps.folder')
+	
+			payload = {
+				"title": title,
+				"parents": parents,
+				"mimeType": mimeType
+			}
+			# print payload
+	
+			new_thread = URLRequestThread(
+				q,
+				"POST",
+				url,
+				headers=headers,
+				data=json.dumps(payload)
+			)
+
+			new_thread.setName(itemId)
+			threads.append(new_thread)
+			new_thread.start()
+
+		for t in threads:
+			t.join()
 		
-		if r.status_code == requests.codes.ok:
-			data = r.json()
-			return data
-		else:
-			r.raise_for_status()
+		result = {}
+		
+		while not q.empty():
+			
+			index, data = q.get()
+			result[index] = data
+				
+		return result
 
 def _work_dir():
 	"""docstring for _work_dir"""

@@ -13,9 +13,10 @@ This is your shiny new corporate account. Let us name it <firstname.lastname@coo
 ##Process
 * _source_: check domain sharing settings (make outside sharing possible)
 * _source/target_: make sure enough free space is available
-* _target_: create two folders (e.g. _Source, _Target)
-	* share source-folder with your source account (Can edit)
-* Register API Client in Developer Console
+* _source_: create a folder (e.g. _Source)
+	* share this folder with your target-account (Can edit)
+* _target_: create a folder (e.g. _Target)
+* Register a Google Drive API Client in Developer Console
 	* create config file (gDrive.json)
 * run ./gDriveMover
 	* authorize accounts (source, target)
@@ -24,8 +25,7 @@ This is your shiny new corporate account. Let us name it <firstname.lastname@coo
 	* moveFolders
 	* copyFiles
 	* copyFilesTarget
-* _source_: delete source-folder
-* _target_: unshare folder
+* _source_: delete source-folder including all copied files
 
 ##Prerequisites
 * [Python Requests: HTTP for Humans](http://docs.python-requests.org/en/latest/user/install/#install)
