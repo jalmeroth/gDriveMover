@@ -94,6 +94,7 @@ class myDrive(object):
 		self.save(filesNew, self.file_files_new)
 		self.save(foldersNew, self.file_folders_new)
 		# print "Need to create", len(foldersNew), "folders at all."
+		print "Done."
 		
 	def copyFilesSource(self):
 		"""docstring for copyFilesSource"""
