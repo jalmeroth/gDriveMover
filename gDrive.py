@@ -260,8 +260,6 @@ class gDrive(object):
 		if r.status_code == requests.codes.ok:
 			data = r.json()
 			return data
-		else:
-			r.raise_for_status()
 			
 	def getName(self, fileId):
 		"""docstring for getName"""
