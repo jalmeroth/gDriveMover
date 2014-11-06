@@ -11,9 +11,9 @@ Now it is the time to move on and make the switch to your company Google account
 	* share this folder with your target-account (Can edit)
 * _target_: create a folder (e.g. _Target)
 * [Register a Google Drive API Client in Developer Console](https://github.com/jalmeroth/gDriveMover/wiki/API_Client)
-	* create config file (gDrive.json)
 * run ./gDriveMover
 	* authorize accounts (source, target)
+	* create config file (gDrive.json)
 	* listFilesFolders
 	* createFolders
 	* moveFolders

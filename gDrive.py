@@ -142,6 +142,24 @@ class authorization(object):
 		if os.path.exists(file):
 			with open(file, "r") as preferences:
 				data = json.load(preferences)
+		else:
+			client_id = raw_input('Please enter the id for your Google API client: ')
+			client_secret = raw_input('Please enter the secret for your Google API client: ')
+			
+			data = {
+				"access_type": "offline",
+				"auth_uri": "https://accounts.google.com/o/oauth2/auth",
+				"client_id": client_id,
+				"client_secret": client_secret,
+				"redirect_uri": "urn:ietf:wg:oauth:2.0:oob",
+				"refresh_token": {},
+				"response_type": "code",
+				"scope": "https://www.googleapis.com/auth/drive",
+				"token_info": "https://www.googleapis.com/oauth2/v1/tokeninfo",
+				"token_uri": "https://accounts.google.com/o/oauth2/token"
+			}
+			
+			self._settings = data
 		
 		return data
 	
