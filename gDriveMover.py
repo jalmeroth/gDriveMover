@@ -22,7 +22,7 @@ class gDriveMover(object):
 		self.file_folders_new = 'folders_new.json'
 		
 		self.maxThreads = 5
-	
+		
 	def save(self, data, filename):
 		"""docstring for save"""
 		file = os.path.join(_work_dir(), filename)
@@ -32,39 +32,26 @@ class gDriveMover(object):
 	def load(self, filename):
 		"""docstring for load"""
 		file = os.path.join(_work_dir(), filename)
-		with open(file,"r") as jsonFile:
-			return json.load(jsonFile)
-	
-	@property
-	def sourceFolder(self):
-		"""docstring for sourceFolder"""
-		# print "sourceFolderId", self._sourceFolder
-		return self._sourceFolder
-	
-	@sourceFolder.setter
-	def sourceFolder(self, folderId):
-		"""docstring for sourceFolder"""
-		# print "sourceFolderId", folderId
-		if folderId:
-			self._sourceFolder = folderId
+		if os.path.exists(file):
+			with open(file,"r") as jsonFile:
+				return json.load(jsonFile)
 		else:
-			self._sourceFolder = self.createSourceFolder()
+			return {}
 	
-	@property
-	def targetFolder(self):
-		"""docstring for targetFolder"""
-		# print "targetFolderId", self._targetFolder
-		return self._targetFolder
-	
-	@targetFolder.setter
-	def targetFolder(self, folderId):
-		"""docstring for targetFolder"""
-		# print "targetFolderId", folderId
-		if folderId:
-			self._targetFolder = folderId
-		else:
-			self._targetFolder = self.createTargetFolder()
-	
+	def retrieveFiles(self):
+		"""save all files to JSON file"""
+		items = self.source.file.retrieve_all_files()
+		self.files = items
+		print "Fetched", len(items), "files"
+		return items
+
+	def retrieveFolders(self):
+		"""save all folders to JSON file"""
+		items = self.source.file.retrieve_all_folders()
+		self.folders = items
+		print "Found", len(items), "folders"
+		return items
+		
 	def createWorkFolder(self, gDriveObj, title="gDriveMover"):
 		"""docstring for createWorkFolder"""
 		file = gDriveObj.file.insert(title=title)
@@ -85,24 +72,23 @@ class gDriveMover(object):
 	
 	def listFilesFolders(self):
 		"""docstring for listFilesFolders"""
-		
 		print 10*"=", "listFilesFolders", 10*"="
 		
-		folders = self.folders()
-		files = self.files()
+		folders = self.folders
+		files = self.files
 		
-		foldersNew = self.foldersNew()
-		filesNew = self.filesNew()
-
+		foldersNew = self.foldersNew
+		filesNew = self.filesNew
+		
 		for folder in folders:
 			folderId = folder['id']
 			if not foldersNew.has_key(folderId):
 				foldersNew[folderId] = folder
-
-		self.save(foldersNew, self.file_folders_new)
-
+		
+		self.foldersNew = foldersNew
+		
 		fields = "id,parents(id,isRoot),title"
-
+		
 		for folder in folders:
 			for parent in folder['parents']:
 				parentId = parent.get('id')
@@ -117,10 +103,9 @@ class gDriveMover(object):
 							"title": parentId
 						}
 					foldersNew[parentId] = parentItem
-
-		self.save(foldersNew, self.file_folders_new)
-		# print "Folders from Folders", len(foldersNew)
-
+		
+		self.foldersNew = foldersNew
+		
 		fields = "id,title"
 		for file in files:
 			fileId = file.get('id')
@@ -141,18 +126,58 @@ class gDriveMover(object):
 					# ignore parents of parents of public files
 					foldersNew[parentId]['parents'] = []
 
-		self.save(filesNew, self.file_files_new)
-		self.save(foldersNew, self.file_folders_new)
+		self.filesNew = filesNew
+		self.foldersNew = foldersNew
 		# print "Need to create", len(foldersNew), "folders at all."
 		print "Done."
 		
+	def copyFiles(self, gDriveObj, files, key):
+		"""docstring for copyFiles"""
+		# print 10*"=", "copyFiles"
+		
+		newFiles = self.filesNew
+		
+		result = True
+		length = len(files)
+		
+		# copy files on gDriveObj, chunked
+		for i in range(0, length, self.maxThreads):
+			print 10*"=", "copyFiles", i, "/", length
+			
+			items = files[i:i+self.maxThreads]
+			results = gDriveObj.file.makeCopy(items)
+			
+			for fileId in results:
+				
+				r = results[fileId]
+				
+				if r.status_code == requests.codes.ok:
+					
+					newFile = r.json()
+					newFileId = newFile.get('id')
+					newFileName = newFile.get('title')
+					
+					print "Copied:", newFileId, newFileName
+					
+					newFiles[fileId][key] = newFile
+					
+				else:
+					print "FAIL:", r.status_code, fileId
+					result = False
+			
+			self.filesNew = newFiles
+			
+		if result == True:
+			print "Done."
+		
+		return result
+		
 	def copyFilesSource(self):
 		"""docstring for copyFilesSource"""
-
 		print 10*"=", "copyFilesSource", 10*"="
 		result = True
 
-		filesNew = self.filesNew()
+		filesNew = self.filesNew
 		
 		newFiles = []
 		
@@ -178,47 +203,15 @@ class gDriveMover(object):
 			else:
 				pass
 		
-		length = len(newFiles)
-		
-		# copy files on source, chunked
-		for i in range(0, length, self.maxThreads):
-			print 10*"=", "copyFilesSource", i, "/", length
-			
-			items = newFiles[i:i+self.maxThreads]
-			results = self.source.file.makeCopy(items)
-			
-			for fileId in results:
-				
-				r = results[fileId]
-				
-				if r.status_code == requests.codes.ok:
-					
-					newFile = r.json()
-					newFileId = newFile.get('id')
-					newFileName = newFile.get('title')
-					
-					print "Copied:", newFileId, newFileName
-					
-					filesNew[fileId]['new'] = newFile
-				
-				else:
-					print "FAIL:", r.status_code, fileId
-					result = False
-			
-			self.save(filesNew, self.file_files_new)
-			
-		if result == True:
-			print "Done."
-		
-		return result
+		return self.copyFiles(self.source, newFiles, 'new')
 
 	def copyFilesTarget(self):
 		
 		print 10*"=", "copyFilesTarget", 10*"="
 		result = True
 
-		filesNew = self.filesNew()
-		foldersNew = self.foldersNew()
+		filesNew = self.filesNew
+		foldersNew = self.foldersNew
 		
 		finalFiles = []
 		
@@ -257,39 +250,7 @@ class gDriveMover(object):
 				# print "Skipping:", fileId
 				pass
 		
-		length = len(finalFiles)
-		
-		# copy files on source, chunked
-		for i in range(0, length, self.maxThreads):
-			print 10*"=", "copyFilesTarget", i, "/", length
-			
-			items = finalFiles[i:i+self.maxThreads]
-			results = self.target.file.makeCopy(items)
-			
-			for fileId in results:
-				
-				r = results[fileId]
-				
-				if r.status_code == requests.codes.ok:
-					
-					newFile = r.json()
-					newFileId = newFile.get('id')
-					newFileName = newFile.get('title')
-					
-					print "Copied:", newFileId, newFileName
-					
-					filesNew[fileId]['finale'] = newFile
-				
-				else:
-					print "FAIL:", r.status_code, fileId
-					result = False
-			
-			self.save(filesNew, self.file_files_new)
-			
-		if result == True:
-			print "Done."
-		
-		return result
+		return self.copyFiles(self.target, finalFiles, 'finale')
 
 	def createFolders(self):
 		"""docstring for createFolders"""
@@ -297,7 +258,7 @@ class gDriveMover(object):
 		print 10*"=", "createFolders", 10*"="
 		result = True
 		
-		foldersNew = self.foldersNew()
+		foldersNew = self.foldersNew
 		newFolders = []
 		
 		# find folders that have not been created on target
@@ -347,7 +308,7 @@ class gDriveMover(object):
 					print "FAIL:", r.status_code, folderId
 					result = False
 			
-			self.save(foldersNew, self.file_folders_new)
+			self.foldersNew = foldersNew
 			
 		if result == True:
 			print "Done."
@@ -360,8 +321,8 @@ class gDriveMover(object):
 		
 		result = True
 		
-		folders = self.folders()
-		foldersNew = self.foldersNew()
+		folders = self.folders
+		foldersNew = self.foldersNew
 		moveFolders = []
 		
 		# find folders that have not been moved on target
@@ -436,70 +397,95 @@ class gDriveMover(object):
 					print "FAIL:", r.status_code, folderId
 					result = False
 			
-			self.save(foldersNew, self.file_folders_new)
+			self.foldersNew = foldersNew
 			
 		if result == True:
 			print "Done."
 		
 		return result
 
-	def retrieveFiles(self, source = True):
-		"""save all files to JSON file"""
-		if source:
-			items = self.source.file.retrieve_all_files()
+	@property
+	def sourceFolder(self):
+		"""docstring for sourceFolder"""
+		# print "sourceFolderId", self._sourceFolder
+		return self._sourceFolder
+	
+	@sourceFolder.setter
+	def sourceFolder(self, folderId):
+		"""docstring for sourceFolder"""
+		# print "sourceFolderId", folderId
+		if folderId:
+			self._sourceFolder = folderId
 		else:
-			items = self.target.file.retrieve_all_files()
-			
-		print "Found", len(items), "files"
-		self.save(items, self.file_files)
-		return items
+			self._sourceFolder = self.createSourceFolder()
+	
+	@property
+	def targetFolder(self):
+		"""docstring for targetFolder"""
+		# print "targetFolderId", self._targetFolder
+		return self._targetFolder
+	
+	@targetFolder.setter
+	def targetFolder(self, folderId):
+		"""docstring for targetFolder"""
+		# print "targetFolderId", folderId
+		if folderId:
+			self._targetFolder = folderId
+		else:
+			self._targetFolder = self.createTargetFolder()
 
+	@property
 	def files(self):
 		"""docstring for files"""
 		file = os.path.join(_work_dir(), self.file_files)
-
-		if os.path.exists(file):
-			return self.load(self.file_files)
-		else:
-			return self.retrieveFiles()
-
-	def retrieveFolders(self, source = True):
-		"""save all folders to JSON file"""
-		if source:
-			items = self.source.file.retrieve_all_folders()
-		else:
-			items = self.target.file.retrieve_all_folders()
-		print "Found", len(items), "folders"
-		self.save(items, self.file_folders)
-		return items
+		
+		if os.path.exists(file): # load files from disk
+			files = self.load(self.file_files)
+		else: # fetch from API
+			files = self.retrieveFiles()
 			
+		return files
+		
+	@files.setter
+	def files(self, items):
+		"""docstring for files"""
+		self.save(items, self.file_files)
+			
+	@property
 	def folders(self):
 		"""docstring for folders"""
 		file = os.path.join(_work_dir(), self.file_folders)
 
-		if os.path.exists(file):
-			return self.load(self.file_folders)
-		else:
-			return self.retrieveFolders()
+		if os.path.exists(file): # load files from disk
+			folders = self.load(self.file_folders)
+		else: # fetch from API
+			folders = self.retrieveFolders()
+		
+		return folders
 	
-	def foldersNew(self):
-		"""docstring for foldersNew"""
-		file = os.path.join(_work_dir(), self.file_folders_new)
-
-		if os.path.exists(file):
-			return self.load(self.file_folders_new)
-		else:
-			return {}
-
+	@folders.setter
+	def folders(self, items):
+		self.save(items, self.file_folders)
+	
+	@property
 	def filesNew(self):
 		"""docstring for filesNew"""
-		file = os.path.join(_work_dir(), self.file_files_new)
-
-		if os.path.exists(file):
-			return self.load(self.file_files_new)
-		else:
-			return {}
-
+		return self.load(self.file_files_new)
+	
+	@filesNew.setter
+	def filesNew(self, items):
+		"""docstring for filesNew"""
+		self.save(items, self.file_files_new)
+	
+	@property
+	def foldersNew(self):
+		"""docstring for foldersNew"""
+		return self.load(self.file_folders_new)
+	
+	@foldersNew.setter
+	def foldersNew(self, items):
+		self.save(items, self.file_folders_new)
+	
 def _work_dir():
 	"""docstring for _work_dir"""
 	return os.path.dirname(os.path.realpath(__file__))
@@ -519,43 +505,13 @@ def main():
 		
 		if source and target:
 			setupComplete = True
-		
-			# if source and target:
-			# 	sourceId = raw_input('Please enter the folderId of your source folder: ')
-			#
-			# 	if sourceId:
-			# 		targetId = raw_input('Please enter the folderId of your target folder: ')
-			#
-			# 		if targetId:
-			# 			sourceData = source.file.fileGet(sourceId, "id,title")
-			# 			targetData = target.file.fileGet(targetId, "id,title")
-			#
-			# 			sourcePermId = source.perm.getIdForEmail(sourceMail)
-			# 			targetPermId = target.perm.getIdForEmail(targetMail)
-			#
-			# 			if sourceData and targetData:
-			# 				unknown = 'Unknown'
-			#
-			# 				sourceName = sourceData.get('title', unknown)
-			# 				targetName = targetData.get('title', unknown)
-			#
-			# 				sourceFolder = sourceData.get('id')
-			# 				targetFolder = targetData.get('id')
-			#
-			# 				sourcePerms = source.perm.get(sourceFolder, sourcePermId)
-			# 				targetPerms = target.perm.get(targetFolder, targetPermId)
-			#
-			# 				if sourceName != unknown and targetName != unknown:
-			# 					print 10*"=", "Using folders"
-			# 					print "Source:", sourceFolder, sourceName, sourcePerms.get('role')
-			# 					print "Target:", targetFolder, targetName, targetPerms.get('role')
 	
 	if setupComplete:
 		
 		retryMaximum = 3
 		
-		sourceFolder = '0B_hnDcfdz_34cmljMWNNU0ZXMU0'
-		targetFolder = '0B16ur9NKHJwBRTV1c2p4T0x3ekU'
+		sourceFolder = None
+		targetFolder = None
 		
 		mover = gDriveMover(
 			source = source,
@@ -567,7 +523,8 @@ def main():
 		print 10*"=", "Using folders", 10*"="
 		print "Source:", mover.sourceFolder
 		print "Target:", mover.targetFolder
-		return
+		# return
+		
 		########## Start: listFilesFolders
 		
 		# create an index of files and folders
@@ -633,7 +590,7 @@ def main():
 		
 		if done:
 			
-			raw_input("Press Enter to copy files on target...")
+			# raw_input("Press Enter to copy files on target...")
 			
 			########## Start: copyFilesTarget
 			
