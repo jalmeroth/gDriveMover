@@ -89,7 +89,7 @@ class authorization(object):
 		
 		if r.status_code == requests.codes.ok:
 			data = r.json()
-			return data.get('access_token', None)
+			return data.get('access_token')
 		else:
 			return self.authorize()
 			
