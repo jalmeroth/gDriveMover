@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from gDrive import gDrive
+import gDrive
 from myDrive import myDrive
 
 
@@ -13,8 +13,8 @@ def main():
 		targetMail = raw_input("Please enter the email address of your target account: ")
 	
 		if targetMail:
-			source = gDrive(sourceMail)
-			target = gDrive(targetMail)
+			source = gDrive.drive(sourceMail)
+			target = gDrive.drive(targetMail)
 		
 			if source and target:
 				sourceId = raw_input('Please enter the folderId of your source folder: ')
@@ -23,8 +23,11 @@ def main():
 					targetId = raw_input('Please enter the folderId of your target folder: ')
 				
 					if targetId:
-						sourceData = source.fileGet(sourceId, "id,title")
-						targetData = target.fileGet(targetId, "id,title")
+						sourceData = source.file.fileGet(sourceId, "id,title")
+						targetData = target.file.fileGet(targetId, "id,title")
+						
+						sourcePermId = source.perm.getIdForEmail(sourceMail)
+						targetPermId = target.perm.getIdForEmail(targetMail)
 					
 						if sourceData and targetData:
 							unknown = 'Unknown'
@@ -34,11 +37,14 @@ def main():
 						
 							sourceFolder = sourceData.get('id')
 							targetFolder = targetData.get('id')
+							
+							sourcePerms = source.perm.get(sourceFolder, sourcePermId)
+							targetPerms = target.perm.get(targetFolder, targetPermId)
 						
 							if sourceName != unknown and targetName != unknown:
 								print 10*"=", "Using folders"
-								print "Source:", sourceName
-								print "Target:", targetName
+								print "Source:", sourceFolder, sourceName, sourcePerms.get('role')
+								print "Target:", targetFolder, targetName, targetPerms.get('role')
 								setupComplete = True
 	
 	if setupComplete:

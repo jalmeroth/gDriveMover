@@ -59,7 +59,7 @@ class myDrive(object):
 				if not foldersNew.has_key(parentId):
 					# print "Trying to looking up extra info:", parentId
 					try:
-						parentItem = self.source.fileGet(parentId, fields=fields)
+						parentItem = self.source.file.fileGet(parentId, fields=fields)
 					except:
 						parentItem = {
 							"id": parentId,
@@ -81,7 +81,7 @@ class myDrive(object):
 				if not foldersNew.has_key(parentId):
 					# print "Trying to looking up extra info:", parentId
 					try:
-						parentItem = self.source.fileGet(parentId, fields=fields)
+						parentItem = self.source.file.fileGet(parentId, fields=fields)
 					except:
 						parentItem = {
 							"id": parentId,
@@ -135,7 +135,7 @@ class myDrive(object):
 			print 10*"=", "copyFilesSource", i, "/", length
 			
 			items = newFiles[i:i+self.maxThreads]
-			results = self.source.makeCopy(items)
+			results = self.source.file.makeCopy(items)
 			
 			for fileId in results:
 				
@@ -214,7 +214,7 @@ class myDrive(object):
 			print 10*"=", "copyFilesTarget", i, "/", length
 			
 			items = finalFiles[i:i+self.maxThreads]
-			results = self.target.makeCopy(items)
+			results = self.target.file.makeCopy(items)
 			
 			for fileId in results:
 				
@@ -277,7 +277,7 @@ class myDrive(object):
 			print 10*"=", "createFolders", i, "/", length
 			
 			items = newFolders[i:i+self.maxThreads]
-			results = self.target.insertFiles(items)
+			results = self.target.file.insertFiles(items)
 			
 			for folderId in results:
 				
@@ -366,7 +366,7 @@ class myDrive(object):
 			print 10*"=", "moveFolders", i, "/", length
 			
 			items = moveFolders[i:i+self.maxThreads]
-			results = self.target.updateFiles(items)
+			results = self.target.file.updateFiles(items)
 			
 			for folderId in results:
 				
@@ -396,9 +396,9 @@ class myDrive(object):
 	def retrieveFiles(self, source = True):
 		"""save all files to JSON file"""
 		if source:
-			items = self.source.retrieve_all_files()
+			items = self.source.file.retrieve_all_files()
 		else:
-			items = self.target.retrieve_all_files()
+			items = self.target.file.retrieve_all_files()
 			
 		print "Found", len(items), "files"
 		self.save(items, self.file_files)
@@ -416,9 +416,9 @@ class myDrive(object):
 	def retrieveFolders(self, source = True):
 		"""save all folders to JSON file"""
 		if source:
-			items = self.source.retrieve_all_folders()
+			items = self.source.file.retrieve_all_folders()
 		else:
-			items = self.target.retrieve_all_folders()
+			items = self.target.file.retrieve_all_folders()
 		print "Found", len(items), "folders"
 		self.save(items, self.file_folders)
 		return items

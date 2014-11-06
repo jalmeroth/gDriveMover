@@ -7,15 +7,16 @@ import Queue
 import time
 from urlRequest import URLRequestThread
 
-class gDrive(object):
-	"""docstring for gDrive"""
+
+class authorization(object):
+	"""docstring for authorization"""
 	def __init__(self, user_id):
-		super(gDrive, self).__init__()
+		super(authorization, self).__init__()
 		self.user_id = user_id
 		self.file_name = 'gDrive.json'
 		self.prefs = self._settings
 		self.beer = self.refresh()
-	
+		
 	def authorize(self):
 		"""docstring for authorize"""
 		auth_uri = self.prefs.get('auth_uri', 'https://accounts.google.com/o/oauth2/auth')
@@ -44,7 +45,7 @@ class gDrive(object):
 		self.prefs['refresh_token'] = tokens
 		self._settings = self.prefs
 		
-		return data.get('access_token', None)
+		return data.get('access_token')
 		
 	def exchangeCode(self, code):
 		"""docstring for exchangeCode"""
@@ -105,6 +106,13 @@ class gDrive(object):
 		if r.status_code == requests.codes.ok:
 			return r.json()
 
+	def headers(self):
+		"""docstring for headers"""
+		headers = {
+			"Authorization": "Bearer " + self.beer
+		}
+		return headers
+
 	@property
 	def beer(self):
 		if hasattr(self, '_beerDead'):
@@ -112,6 +120,8 @@ class gDrive(object):
 			if(self._beerDead > timeNow):
 				# print "Giving beer"
 				return self._beer
+		else:
+			return self.refresh()
 		
 	@beer.setter
 	def beer(self, token):
@@ -140,6 +150,36 @@ class gDrive(object):
 		"""docstring for _settings"""
 		with open(_work_dir() + os.sep + self.file_name, 'w+') as preferences:
 			json.dump(prefs, preferences)
+
+class permissions(object):
+	"""docstring for permissions"""
+	def __init__(self, auth):
+		super(permissions, self).__init__()
+		self.auth = auth
+
+	def getIdForEmail(self, email):
+		"""docstring for getIdForEmail"""
+		url = 'https://www.googleapis.com/drive/v2/permissionIds/' + email
+		
+		r = requests.get(url, headers=self.auth.headers())
+		
+		data = r.json()
+		return data.get('id')
+		
+	def get(self, fileId, permissionId):
+		"""docstring for get"""
+		url = 'https://www.googleapis.com/drive/v2/files/' + fileId + '/permissions/' + permissionId
+		
+		r = requests.get(url, headers=self.auth.headers())
+		
+		data = r.json()
+		return data
+
+class files(object):
+	"""docstring for files"""
+	def __init__(self, auth):
+		super(files, self).__init__()
+		self.auth = auth
 	
 	def searchFiles(self, token = None, q = None, fields = None):
 		"""docstring for searchFiles"""
@@ -157,15 +197,6 @@ class gDrive(object):
 			
 		url = 'https://www.googleapis.com/drive/v2/files'
 		
-		if not self.beer:
-			self.beer = self.refresh()
-
-		# print "beer:", self.beer
-	
-		headers = {
-			"Authorization": "Bearer " + self.beer
-		}
-	
 		params = {
 			"pageToken": token,
 			"q": q,
@@ -173,7 +204,7 @@ class gDrive(object):
 			"fields": fields
 		}
 
-		r = requests.get(url, headers=headers, params=params)
+		r = requests.get(url, headers=self.auth.headers(), params=params)
 		
 		if r.status_code == requests.codes.ok:
 			data = r.json()
@@ -243,19 +274,12 @@ class gDrive(object):
 		
 		url = 'https://www.googleapis.com/drive/v2/files/' + fileId
 		
-		if not self.beer:
-			self.beer = self.refresh()
-
-		headers = {
-			"Authorization": "Bearer " + self.beer
-		}
-	
 		params = {
 			"fileId": fileId,
 			"fields": fields
 		}
 
-		r = requests.get(url, headers=headers, params=params)
+		r = requests.get(url, headers=self.auth.headers(), params=params)
 		
 		if r.status_code == requests.codes.ok:
 			data = r.json()
@@ -271,18 +295,17 @@ class gDrive(object):
 		if fields == None:
 			fields = "id,parents(id,isRoot),title"
 		
-		if not self.beer:
-			self.beer = self.refresh()
-		
 		params = {
 			"fields": fields
 		}
 		
 		headers = {
 			"Content-Type": "application/json",
-			"Authorization": "Bearer " + self.beer
 		}
+		
+		headers.update(self.auth.headers())
 		# print headers
+		
 		threads = []
 		q = Queue.Queue()
 		
@@ -337,15 +360,9 @@ class gDrive(object):
 		if fields == None:
 			fields = "id,parents(id,isRoot),title"
 		
-		if not self.beer:
-			self.beer = self.refresh()
-
-		headers = {
-			"Authorization": "Bearer " + self.beer
-		}
-	
 		threads = []
 		q = Queue.Queue()
+		headers = self.auth.headers()
 		
 		for item in items:
 			# print item
@@ -399,16 +416,11 @@ class gDrive(object):
 		url = "https://www.googleapis.com/drive/v2/files?" + urllib.urlencode(params)
 		# print url
 
-		if not self.beer:
-			self.beer = self.refresh()
-
-		# print "beer:", self.beer
-
 		headers = {
 			"Content-Type": "application/json",
-			"Authorization": "Bearer " + self.beer
 		}
-		# print headers
+		
+		headers.update(self.auth.headers())
 
 		threads = []
 		q = Queue.Queue()
@@ -449,6 +461,16 @@ class gDrive(object):
 			result[index] = data
 				
 		return result
+		
+class drive(object):
+	"""docstring for drive"""
+	def __init__(self, user_id):
+		super(drive, self).__init__()
+		self.user_id = user_id
+		
+		self.auth = authorization(self.user_id)
+		self.perm = permissions(self.auth)
+		self.file = files(self.auth)
 
 def _work_dir():
 	"""docstring for _work_dir"""
