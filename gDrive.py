@@ -198,6 +198,7 @@ class files(object):
 	def __init__(self, auth):
 		super(files, self).__init__()
 		self.auth = auth
+		self.fields = "id,parents(id,isRoot),title"
 	
 	def searchFiles(self, token = None, q = None, fields = None):
 		"""docstring for searchFiles"""
@@ -373,6 +374,21 @@ class files(object):
 				
 		return result
 
+	def update(self, fileId, **kwargs):
+		"""docstring for insertFile"""
+		
+		params = {
+			'addParents': ",".join(kwargs.get('addParents', [])),
+			'removeParents': ",".join(kwargs.get('removeParents', [])),
+			'fields': kwargs.get('fields', self.fields)
+		}
+		
+		url = 'https://www.googleapis.com/drive/v2/files/' + fileId
+		
+		r = requests.put(url, headers=self.auth.headers(), params=params)
+		
+		return r.json()
+
 	def updateFiles(self, items, fields = None):
 		"""docstring for updateFiles"""
 		if fields == None:
@@ -420,6 +436,30 @@ class files(object):
 			result[index] = data
 				
 		return result
+
+	def insert(self, **kwargs):
+		"""docstring for insertFile"""
+		params = {
+			'fields': kwargs.get('fields', self.fields)
+		}
+		
+		headers = {
+			"Content-Type": "application/json",
+		}
+		
+		payload = {
+			'title': kwargs.get('title', 'Untitled'),
+			'parents': kwargs.get('parents', []),
+			'mimeType': kwargs.get('mimeType', 'application/vnd.google-apps.folder')
+		}
+		
+		headers.update(self.auth.headers())
+		
+		url = 'https://www.googleapis.com/drive/v2/files?' + urllib.urlencode(params)
+		
+		r = requests.post(url, headers=headers, data=json.dumps(payload))
+		
+		return r.json()
 
 	def insertFiles(self, items, fields = None):
 		"""docstring for insertFiles"""
