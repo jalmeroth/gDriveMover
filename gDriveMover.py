@@ -5,10 +5,10 @@ import requests
 import gDrive
 
 
-class myDrive(object):
-	"""docstring for myDrive"""
+class gDriveMover(object):
+	"""docstring for gDriveMover"""
 	def __init__(self, source = None, sourceFolder = None, target = None, targetFolder = None):
-		super(myDrive, self).__init__()
+		super(gDriveMover, self).__init__()
 		
 		self.source = source
 		self.target = target
@@ -16,10 +16,10 @@ class myDrive(object):
 		self.sourceFolder = sourceFolder
 		self.targetFolder = targetFolder
 		
-		self.file_files = 'myDrive_files.json'
-		self.file_files_new = 'myDrive_files_new.json'
-		self.file_folders = 'myDrive_folders.json'
-		self.file_folders_new = 'myDrive_folders_new.json'
+		self.file_files = 'files.json'
+		self.file_files_new = 'files_new.json'
+		self.file_folders = 'folders.json'
+		self.file_folders_new = 'folders_new.json'
 		
 		self.maxThreads = 5
 	
@@ -557,7 +557,7 @@ def main():
 		sourceFolder = '0B_hnDcfdz_34cmljMWNNU0ZXMU0'
 		targetFolder = '0B16ur9NKHJwBRTV1c2p4T0x3ekU'
 		
-		mover = myDrive(
+		mover = gDriveMover(
 			source = source,
 			sourceFolder = sourceFolder,
 			target = target,
