@@ -10,9 +10,9 @@ from urlRequest import URLRequestThread
 
 class authorization(object):
 	"""docstring for authorization"""
-	def __init__(self, user_id):
+	def __init__(self, userId):
 		super(authorization, self).__init__()
-		self.user_id = user_id
+		self.userId = userId
 		self.file_name = 'gDrive.json'
 		self.prefs = self._settings
 		self.beer = self.refresh()
@@ -29,7 +29,7 @@ class authorization(object):
 			"access_type": self.prefs.get('access_type', 'offline')
 		}
 		
-		print 10*"=", "Authorizing account:", self.user_id, 10*"="
+		print 10*"=", "Authorizing account:", self.userId, 10*"="
 		print "Go to the following link in your browser:"
 		print auth_uri + "?" + urllib.urlencode(params)
 		
@@ -40,7 +40,7 @@ class authorization(object):
 		# print "refresh_token", data.get('refresh_token', None)
 
 		tokens = self.prefs.get('refresh_token', {}) # all existing tokens
-		tokens.update({self.user_id: data.get('refresh_token', None)})
+		tokens.update({self.userId: data.get('refresh_token', None)})
 		
 		self.prefs['refresh_token'] = tokens
 		self._settings = self.prefs
@@ -74,7 +74,7 @@ class authorization(object):
 		refresh_token = self.prefs.get("refresh_token", None)
 		
 		if refresh_token:
-			token = refresh_token.get(self.user_id)
+			token = refresh_token.get(self.userId)
 		else:
 			return self.authorize()
 		
@@ -174,7 +174,61 @@ class permissions(object):
 	def __init__(self, auth):
 		super(permissions, self).__init__()
 		self.auth = auth
-
+		self.fields = 'id,role,type'
+	
+	def update(self, fileId, permissionId, **kwargs):
+		"""docstring for insert"""
+		params = {
+			'transferOwnership': kwargs.get('sendNotificationEmails', False),
+			'fields': kwargs.get('fields', self.fields)
+		}
+		
+		headers = {
+			"Content-Type": "application/json",
+		}
+		
+		headers.update(self.auth.headers())
+		
+		payload = {
+			'role': kwargs.get('role')
+		}
+		
+		# fileId = kwargs.get('fileId')
+		url = 'https://www.googleapis.com/drive/v2/files/' + fileId + '/permissions/' + permissionId + '?' + urllib.urlencode(params)
+		
+		r = requests.put(url, headers=headers, data=json.dumps(payload))
+		
+		data = r.json()
+		return data
+	
+	def insert(self, fileId, **kwargs):
+		"""docstring for insert"""
+		params = {
+			'emailMessage': kwargs.get('emailMessage'),
+			'sendNotificationEmails': kwargs.get('sendNotificationEmails', False),
+			'fields': kwargs.get('fields', self.fields)
+		}
+		
+		headers = {
+			"Content-Type": "application/json",
+		}
+		
+		headers.update(self.auth.headers())
+		
+		payload = {
+			'role': kwargs.get('role'),
+			'type': kwargs.get('type'),
+			'id': kwargs.get('id')
+		}
+		
+		# fileId = kwargs.get('fileId')
+		url = 'https://www.googleapis.com/drive/v2/files/' + fileId + '/permissions?' + urllib.urlencode(params)
+		
+		r = requests.post(url, headers=headers, data=json.dumps(payload))
+		
+		data = r.json()
+		return data
+	
 	def getIdForEmail(self, email):
 		"""docstring for getIdForEmail"""
 		url = 'https://www.googleapis.com/drive/v2/permissionIds/' + email
@@ -522,11 +576,11 @@ class files(object):
 		
 class drive(object):
 	"""docstring for drive"""
-	def __init__(self, user_id):
+	def __init__(self, userId):
 		super(drive, self).__init__()
-		self.user_id = user_id
+		self.userId = userId
 		
-		self.auth = authorization(self.user_id)
+		self.auth = authorization(self.userId)
 		self.perm = permissions(self.auth)
 		self.file = files(self.auth)
 
