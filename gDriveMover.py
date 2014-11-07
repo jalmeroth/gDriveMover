@@ -1,6 +1,8 @@
 #!/usr/bin/python
 import os
+import sys
 import json
+import argparse
 import requests
 import gDrive
 
@@ -404,6 +406,56 @@ class gDriveMover(object):
 		
 		return result
 
+	def fixPermissions(self, gDriveObj, fileId, userId, permRole):
+		"""docstring for fixPermissions"""
+		myDrive = gDriveObj
+	
+		permId = myDrive.perm.getIdForEmail(userId)
+		# print permId
+	
+		permission = myDrive.perm.get(fileId, permId)
+		# print permission
+	
+		newPerm = {
+			'role': permRole,
+			'type': 'user',
+			'id': permId
+		}
+	
+		if permission.has_key('error'):
+			if permission['error']['code'] == 404:
+			
+				result = myDrive.perm.insert(fileId, **newPerm)
+			
+				if result == newPerm:
+					print "Done."
+				else:
+					print result
+			
+		elif permission.get('id') == permId:
+				roles = ('owner', 'writer', 'reader')
+			
+				role = permission.get('role')
+				newRole = newPerm.get('role')
+			
+				if role in roles and newRole in roles:
+				
+					roleIndex = roles.index(role)
+					newRoleIndex = roles.index(newRole)
+			
+					if roleIndex <= newRoleIndex:
+						pass
+						# print "Role:", role, roles.index(role), roles.index(newPerm.get('role')), "ok"
+					else:
+						result = myDrive.perm.update(fileId, permId, role=newPerm.get('role'))
+				
+						if result == newPerm:
+							print "Done."
+						else:
+							print result
+		else:
+			print "perm", fileId, json.dumps(permission)
+
 	@property
 	def sourceFolder(self):
 		"""docstring for sourceFolder"""
@@ -418,6 +470,8 @@ class gDriveMover(object):
 			self._sourceFolder = folderId
 		else:
 			self._sourceFolder = self.createSourceFolder()
+		
+		self.fixPermissions(self.source, self._sourceFolder, self.target.userId, 'reader')
 	
 	@property
 	def targetFolder(self):
@@ -433,6 +487,8 @@ class gDriveMover(object):
 			self._targetFolder = folderId
 		else:
 			self._targetFolder = self.createTargetFolder()
+		
+		self.fixPermissions(self.target, self._targetFolder, self.target.userId, 'writer')
 
 	@property
 	def files(self):
@@ -493,10 +549,33 @@ def _work_dir():
 def main():
 	"""docstring for main"""
 	
+	# initialize Arg-parser
+	parser = argparse.ArgumentParser()
+	
+	# setup Arg-parser
+	parser.add_argument('--sourceMail', type=str, help='Email address of your source account')
+	parser.add_argument('--targetMail', type=str, help='Email address of your target account')
+	parser.add_argument('--sourceFolder', type=str, help='ID of your source folder')
+	parser.add_argument('--targetFolder', type=str, help='ID of your target folder')
+	
+	# initialize args
+	args = sys.argv[1:]
+	
+	# parse arguments
+	args, unknown = parser.parse_known_args(args)
+	# print args, unknown
+	# sys.exit(0)
+	
 	setupComplete = False
 	
-	sourceMail = raw_input("Please enter the email address of your source account: ")
-	targetMail = raw_input("Please enter the email address of your target account: ")
+	sourceMail = getattr(args, 'sourceMail', None)
+	targetMail = getattr(args, 'targetMail', None)
+
+	if not sourceMail:
+		sourceMail = raw_input("Please enter the email address of your source account: ")
+		
+	if not targetMail:
+		targetMail = raw_input("Please enter the email address of your target account: ")
 	
 	if targetMail and sourceMail:
 		
@@ -510,8 +589,8 @@ def main():
 		
 		retryMaximum = 3
 		
-		sourceFolder = None
-		targetFolder = None
+		sourceFolder = getattr(args, 'sourceFolder', None)
+		targetFolder = getattr(args, 'targetFolder', None)
 		
 		mover = gDriveMover(
 			source = source,
@@ -521,8 +600,8 @@ def main():
 		)
 		
 		print 10*"=", "Using folders", 10*"="
-		print "Source:", mover.sourceFolder
-		print "Target:", mover.targetFolder
+		print "Source:", mover.sourceFolder, source.file.getName(mover.sourceFolder)
+		print "Target:", mover.targetFolder, target.file.getName(mover.targetFolder)
 		# return
 		
 		########## Start: listFilesFolders
