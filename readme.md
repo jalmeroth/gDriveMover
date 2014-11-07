@@ -7,13 +7,13 @@ Now it is the time to move on and make the switch to your company Google account
 ##Process
 * _source_: check domain sharing settings (make outside sharing possible)
 * _source/target_: make sure enough free space is available
-* _source_: create a folder (e.g. _Source)
-	* share this folder with your target-account (Can edit)
-* _target_: create a folder (e.g. _Target)
 * [Register a Google Drive API Client in Developer Console](https://github.com/jalmeroth/gDriveMover/wiki/API_Client)
 * run ./gDriveMover
 	* authorize accounts (source, target)
 	* create config file (gDrive.json)
+	* create a folder on source
+		* share this folder with your target-account (Can edit)
+	* create a folder on target
 	* listFilesFolders
 	* createFolders
 	* moveFolders
