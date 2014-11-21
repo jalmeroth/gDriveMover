@@ -1,4 +1,5 @@
 #!/usr/bin/python
+from helper import updateStatus
 
 class processor(object):
 	"""docstring for processor"""
@@ -54,10 +55,16 @@ class processor(object):
 		
 	def processFilesFolders(self, items):
 		print 10*"=", "processor.processFilesFolders",10*"="
-		print "Crunching", len(items), "records."
+		
+		i = 0
+		c = len(items)
+		print "Crunching", c, "records."
 
 		# merge new items into files/folders
 		for item in items:
+			
+			updateStatus(i, c)
+			i += 1
 			
 			typeFolder = 'application/vnd.google-apps.folder'
 			mimeType = item.get('mimeType', typeFolder)

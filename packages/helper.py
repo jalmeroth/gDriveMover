@@ -1,7 +1,25 @@
 #!/usr/bin/python
 import os
+import sys
 import json
+import time
 from email.utils import parseaddr
+
+
+def updateStatus(status, finish, msg = None, bar_length = 10):
+	"""docstring for updateStatus"""
+	# do the math
+	percent = float(status) / finish
+	hashes = '#' * int(round(percent * bar_length))
+	message = " [{0:10}] {1}/{2}".format(hashes, str(status), str(finish))
+	
+	# add some additional text
+	if msg:
+		message += ' '+ str(msg)
+	
+	# print out
+	sys.stdout.write(message + '\r')
+	sys.stdout.flush()
 
 def validEmail(email):
 	addr = parseaddr(email)
@@ -26,3 +44,13 @@ def load(filename):
 			return json.load(jsonFile)
 	else:
 		return {}
+
+def main():
+	"""docstring for main"""
+	c = 10
+	for i in range(c):
+		time.sleep(1)
+		updateStatus(i, c, "token"+str(i))
+
+if __name__ == '__main__':
+	main()
