@@ -37,10 +37,10 @@ def main():
 	sourceMail = getattr(args, 'sourceMail', None)
 	targetMail = getattr(args, 'targetMail', None)
 
-	if not validEmail(sourceMail):
+	if not sourceMail:
 		sourceMail = raw_input("Please enter the email address of your source account: ")
 		
-	if not validEmail(targetMail):
+	if not targetMail:
 		targetMail = raw_input("Please enter the email address of your target account: ")
 	
 	if validEmail(targetMail) and validEmail(sourceMail):
