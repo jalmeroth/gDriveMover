@@ -3,8 +3,9 @@ import json
 import requests
 import urllib
 import Queue
-from urlRequest import URLRequestThread
 
+from urlRequest import URLRequestThread
+from helper import updateStatus
 
 class files(object):
 	"""docstring for files"""
@@ -41,7 +42,9 @@ class files(object):
 		"""This is where the actual search is happening"""
 		
 		if token:
-			print "Fetching next", maxResults, "items with token", str(token[0:15]) + "..."
+			# print "Fetching next", maxResults, "items with token", str(token[0:15]) + "..."
+			msg = "Fetching next " + str(maxResults) + " items with token " + str(token)
+			updateStatus(0,0,msg)
 		
 		url = 'https://www.googleapis.com/drive/v2/files'
 		
