@@ -49,8 +49,12 @@ class processor(object):
 		parentId = parent.get('id')
 		
 		if parentId in folders: # exists
-			folders[parentId].update(parent)
+			try:
+				folders[parentId].update(parent)
+			except AttributeError:
+				print "Could not update folder", parentId, "with", parent
 		else: # fetch info from API
+			# print "Fetching info for", parentId
 			item = self.gDriveObj.file.fileGet(parentId)
 			folders[parentId] = item
 			
@@ -59,6 +63,7 @@ class processor(object):
 	def processFilesFolders(self, items):
 		print 10*"=", "processor.processFilesFolders",10*"="
 		
+		parentItems = []
 		i = 0
 		c = len(items)
 		
@@ -84,7 +89,11 @@ class processor(object):
 			parents = item.get('parents', [])
 
 			for parent in parents:
-				self.processParents(parent)
+				parentItems.append(parent)
+		
+		# print 'Found', len(parentItems), 'parents.'
+		for parent in parentItems:
+			self.processParents(parent)
 		
 		print "\nDone."
 		# save all changes

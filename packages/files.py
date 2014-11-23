@@ -60,7 +60,7 @@ class files(object):
 		data = r.json()
 		return data
 
-	def search(self, q = None, fields = None, maxResults = 999):
+	def search(self, q = None, fields = None, maxResults = 100):
 		
 		token = None
 		

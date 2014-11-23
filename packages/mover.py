@@ -10,7 +10,7 @@ class gDriveMover(object):
 		self.source = source
 		self.target = target
 		
-		print 10*"=", "Initializing gDriveMover"
+		print 10*"=", "gDriveMover"
 		self.sourceFolder = sourceFolder
 		self.targetFolder = targetFolder
 		
@@ -35,7 +35,7 @@ class gDriveMover(object):
 		print 10*"=", "createTargetFolder"
 		return self.createWorkFolder(self.target)
 	
-	def searchMode1(self):
+	def searchMode1(self, maxResults = 100):
 		# find items, which the sourceId has access to
 		query = "("
 		query += "'" + self.source.userId + "' in owners OR "
@@ -50,7 +50,7 @@ class gDriveMover(object):
 		query += "trashed != true"
 		# print query
 		
-		items = self.target.file.search(q = query)
+		items = self.target.file.search(q = query, maxResults = maxResults)
 		# print json.dumps(items)
 		return items
 		

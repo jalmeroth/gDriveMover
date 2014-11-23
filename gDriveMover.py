@@ -5,7 +5,7 @@ import argparse
 
 from packages.mover import gDriveMover
 from packages.gDrive import gDrive
-from packages.helper import validEmail, save, unlink
+from packages.helper import validEmail, save, unlink, load
 
 
 def main():
@@ -19,6 +19,7 @@ def main():
 	parser.add_argument('--targetMail', type=str, help='Email address of your target account')
 	parser.add_argument('--sourceFolder', type=str, help='ID of your source folder')
 	parser.add_argument('--targetFolder', type=str, help='ID of your target folder')
+	parser.add_argument('--items', type=str, help='')
 	parser.add_argument('--retries', type=int, default=3, help='Number of operation retries')	
 	parser.add_argument('--refresh', action='store_true', help='Re-Fetches your files/folders from Google')
 	parser.add_argument('--copy', action='store_true', help='Copy your files on target first')
@@ -72,20 +73,31 @@ def main():
 		# # files / folders we already know
 		files = target.fileHandler.files
 		folders = target.fileHandler.folders
-
-		# TODO: (jan.almeroth) Retain or remove existing items?
-
+		
+		
 		if doRefresh or (len(files) == 0 and len(folders) == 0):
-
-			if not copyFirst:
-				items = mover.searchMode1()
+			
+			# TODO: (jan.almeroth) Retain or remove existing items?
+		
+			items_file = getattr(args, 'items', None)
+			
+			if not items_file:
+				items_file = 'items.json'
+			
+			if not doRefresh:
+				items = load(items_file)
+				
 			else:
-				items = source.file.search()
-
-			# print json.dumps(items)
-			save(items, 'items.json')
+				
+				if not copyFirst:
+					items = mover.searchMode1()
+				else:
+					items = source.file.search()
+				# print json.dumps(items)
+				save(items, items_file)
+			
 			files, folders = source.processor.processFilesFolders(items)
-			unlink('items.json')
+			# unlink(items_file)
 
 		# new files / new folders that needs to be created
 		newFiles, newFolders, newFoldersMove = target.processor.processNewFilesFolders()
