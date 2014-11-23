@@ -6,19 +6,24 @@ import time
 from email.utils import parseaddr
 
 
-def updateStatus(status, finish, msg = None, bar_length = 10):
+def updateStatus(status = 0, finish = 0, msg = None, bar_length = 10):
 	"""docstring for updateStatus"""
+	
+	message = ''
+	
+	if status >= 0 and finish > 0:
 	# do the math
-	percent = float(status) / finish
-	hashes = '#' * int(round(percent * bar_length))
-	message = " [{0:10}] {1}/{2}".format(hashes, str(status), str(finish))
+		percent = float(status) / finish
+		hashes = '#' * int(round(percent * bar_length))
+		message = "[{0:10}] {1}/{2}".format(hashes, str(status), str(finish))
 	
 	# add some additional text
 	if msg:
-		message += ' '+ str(msg)
+		message += ' '+ str(msg) if message else str(msg)
 	
+	# print status, finish, message
 	# print out
-	sys.stdout.write(message + '\r')
+	sys.stdout.write('\r' + message + '\033[K')
 	sys.stdout.flush()
 
 def validEmail(email):
