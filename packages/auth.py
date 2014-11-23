@@ -33,7 +33,7 @@ class authorization(object):
 		longUri = auth_uri + "?" + urllib.urlencode(params)
 		shortUri = self.shorten(longUri)
 
-		print 10*"=", "Authorizing account:", self.userId, 10*"="
+		print 10*"=", "Authorizing account:", self.userId
 		print "Go to the following link in your browser:", shortUri if shortUri else longUri
 		
 		code = raw_input("Enter verification code: ")
@@ -154,7 +154,7 @@ class authorization(object):
 			with open(file, "r") as preferences:
 				data = json.load(preferences)
 		else:
-			print 10*"=", "Client setup", 10*"="
+			print 10*"=", "Client setup"
 			
 			client_id = raw_input('Please enter the id for your Google API client: ')
 			client_secret = raw_input('Please enter the secret for your Google API client: ')

@@ -67,7 +67,7 @@ class files(object):
 		if q == None:
 			q = "trashed != true"
 
-		print 10*"=", "file.search", 10*"="
+		print 10*"=", "file.search"
 		print "Query:", q
 		
 		if fields == None:

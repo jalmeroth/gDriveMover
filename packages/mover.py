@@ -10,7 +10,7 @@ class gDriveMover(object):
 		self.source = source
 		self.target = target
 		
-		print 10*"=", "Initializing gDriveMover", 10*"="
+		print 10*"=", "Initializing gDriveMover"
 		self.sourceFolder = sourceFolder
 		self.targetFolder = targetFolder
 		
@@ -105,7 +105,7 @@ class gDriveMover(object):
 	def copyFilesSource(self):
 		"""docstring for copyFilesSource"""
 
-		print 10*"=", "copyFilesSource", 10*"="
+		print 10*"=", "copyFilesSource"
 
 		files = self.source.fileHandler.files
 		copyFiles = self.source.fileHandler.copyFiles
@@ -141,7 +141,7 @@ class gDriveMover(object):
 
 	def copyFilesTarget(self, copyFiles = None):
 		
-		print 10*"=", "copyFilesTarget", 10*"="
+		print 10*"=", "copyFilesTarget"
 		result = True
 
 		if not copyFiles:
@@ -188,7 +188,7 @@ class gDriveMover(object):
 	def createFolders(self):
 		"""docstring for createFolders"""
 
-		print 10*"=", "createFolders", 10*"="
+		print 10*"=", "createFolders"
 		result = True
 		
 		folders = self.target.fileHandler.folders
@@ -254,7 +254,7 @@ class gDriveMover(object):
 	def moveFolders(self):
 		"""docstring for moveFolders"""
 		
-		print 10 * "=", "moveFolders", 10*"="
+		print 10 * "=", "moveFolders"
 		
 		result = True
 		
