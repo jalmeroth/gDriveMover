@@ -34,7 +34,10 @@ class processor(object):
 		
 		if folderId in folders: #exists
 			# print "Update:", folderId, item
-			folders[folderId].update(item)
+			try:
+				folders[folderId].update(item)
+			except AttributeError:
+				print "Could not update folder", folderId, "with", item
 		else: # not exists
 			folders[folderId] = item
 		
@@ -144,7 +147,8 @@ class processor(object):
 
 
 	def processNewFilesFolders(self, files = None, folders = None):
-
+		print 10*"=", "processor.processNewFilesFolders",10*"="
+		
 		if not files:
 			files = self.files
 
@@ -153,5 +157,10 @@ class processor(object):
 
 		newFiles = self.processNewFiles(files)
 		newFolders, newFoldersMove = self.processNewFolders(folders)
+
+		strFiles = "files: " + str(len(newFiles)).ljust(7, ' ')
+		strFolders = "folders: " + str(len(newFolders)).ljust(7, ' ')
+		strFoldersMove = "folders to move: " + str(len(newFoldersMove)).ljust(7, ' ')
+		print strFiles, strFolders, strFoldersMove
 
 		return (newFiles, newFolders, newFoldersMove)

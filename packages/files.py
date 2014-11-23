@@ -5,7 +5,7 @@ import urllib
 import Queue
 
 from urlRequest import URLRequestThread
-from helper import updateStatus
+from helper import output
 
 class files(object):
 	"""docstring for files"""
@@ -44,7 +44,7 @@ class files(object):
 		if token:
 			# print "Fetching next", maxResults, "items with token", str(token[0:15]) + "..."
 			msg = "Fetching next " + str(maxResults) + " items with token " + str(token)
-			updateStatus(0,0,msg)
+			output(msg)
 		
 		url = 'https://www.googleapis.com/drive/v2/files'
 		
@@ -60,7 +60,7 @@ class files(object):
 		data = r.json()
 		return data
 
-	def search(self, q = None, fields = None, maxResults = 100):
+	def search(self, q = None, fields = None, maxResults = 999):
 		
 		token = None
 		
@@ -90,6 +90,7 @@ class files(object):
 			if not token:
 				break
 		
+		print "\nDone."
 		return result
 
 	def fileGet(self, fileId, fields = None):
