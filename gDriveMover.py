@@ -5,7 +5,7 @@ import argparse
 
 from packages.mover import gDriveMover
 from packages.gDrive import gDrive
-from packages.helper import validEmail
+from packages.helper import validEmail, save, unlink
 
 
 def main():
@@ -83,16 +83,12 @@ def main():
 				items = source.file.search()
 
 			# print json.dumps(items)
-
+			save(items, 'items.json')
 			files, folders = source.processor.processFilesFolders(items)
+			unlink('items.json')
 
 		# new files / new folders that needs to be created
 		newFiles, newFolders, newFoldersMove = target.processor.processNewFilesFolders()
-
-		strFiles = "files", str(len(newFiles)).ljust(7, ' ')
-		strFolders = "folders", str(len(newFolders)).ljust(7, ' ')
-		strFoldersMove = "folders to move", str(len(newFoldersMove)).ljust(7, ' ')
-		print strFiles, strFolders, strFoldersMove
 		
 		if len(newFolders): ########## createFolders
 
