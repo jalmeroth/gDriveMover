@@ -58,30 +58,32 @@ class processor(object):
 		
 		i = 0
 		c = len(items)
+		
 		print "Crunching", c, "records."
 
 		# merge new items into files/folders
 		for item in items:
 			
-			updateStatus(i, c)
 			i += 1
+			updateStatus(i, c)
 			
 			typeFolder = 'application/vnd.google-apps.folder'
 			mimeType = item.get('mimeType', typeFolder)
-			
+
 			# is some kind of file
 			if mimeType != typeFolder:
 				self.processFile(item)
-				
+
 			else: # is a folder
 				self.processFolder(item)
-				
+
 			# item got parents
 			parents = item.get('parents', [])
-			
+
 			for parent in parents:
 				self.processParents(parent)
 		
+		print "\nDone."
 		# save all changes
 		self.fh.writeFilesToDisk()
 
