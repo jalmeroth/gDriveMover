@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 import logging
-import requests
 
-from packages.helper import save
+from packages.helper import load, save
 from packages.gDrive2 import user
 
 logging.basicConfig(level=logging.DEBUG)
@@ -11,9 +10,7 @@ logger = logging.getLogger(__name__)
 def main():
     """docstring for main"""
     
-    accounts = {
-        'source@example.com': 'target@example.com'
-    }
+    accounts = load('accounts.json')
     
     impersonation = True
     
