@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 def main():
     """docstring for main"""
     
-    accounts = load('accounts.json')
+    accounts = load('./settings/accounts.json')
     
     impersonation = True
     

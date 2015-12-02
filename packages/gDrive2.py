@@ -13,6 +13,8 @@ from files import files
 # shared object for filehandling
 # myFileHandler = fileHandler()
 
+DIR_SETTINGS = "./settings/"
+
 class user(object):
     """docstring for user"""
     def __init__(self, user_Id, impersonation = False):
@@ -22,14 +24,14 @@ class user(object):
         self.impersonation = impersonation
         
         if self.impersonation:
-            self.file_prefs = 'gDrivePro.json'
+            self.file_prefs = (DIR_SETTINGS + 'gDrivePro.json')
             prefs = load(self.file_prefs)
             # client_id = prefs.get('client_id', None) or raw_input('Please enter the id for your Google API client: ')
             # client_secret = prefs.get('client_secret', None) or raw_input('Please enter the secret for your Google API client: ')
             # scope = ["https://www.googleapis.com/auth/drive"]
             tokens = prefs.get('tokens')
             
-            data = load('oauth2service.json')
+            data = load(DIR_SETTINGS + 'oauth2service.json')
             private_key = data.get('private_key')
             client_email = data.get('client_email')
             scope = ['https://www.googleapis.com/auth/drive']
