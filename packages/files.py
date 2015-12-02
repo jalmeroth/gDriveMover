@@ -14,10 +14,6 @@ class files(object):
         self.fields = "id,mimeType,parents(id,isRoot),title"
         self.user = userObj
     
-    def hello(self):
-        """docstring for hello"""
-        print "Hello " + self.user.user_Id
-    
     def listChildren(self, folderId, token = None, q = None, fields = None):
         """docstring for listChildren"""
         maxResults = 1000
