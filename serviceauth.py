@@ -7,10 +7,13 @@ from packages.gDrive2 import user
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
+DIR_SETTINGS = "./settings/"
+DIR_CACHE = "./cache/"
+
 def main():
     """docstring for main"""
     
-    accounts = load('./settings/accounts.json')
+    accounts = load(DIR_SETTINGS + 'accounts.json')
     
     impersonation = True
     
@@ -23,8 +26,8 @@ def main():
         source_files = source_user.files
         target_files = target_user.files
         
-        save(source_files.search(), './cache/preflight_source_' + source_user_Id + '.json')
-        save(target_files.search(), './cache/preflight_target_' + target_user_Id + '.json')
+        save(source_files.search(), DIR_CACHE + 'preflight_source_' + source_user_Id + '.json')
+        save(target_files.search(), DIR_CACHE + 'preflight_target_' + target_user_Id + '.json')
 
 if __name__ == '__main__':
     main()
