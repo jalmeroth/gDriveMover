@@ -50,6 +50,10 @@ def unlink(filename):
 def save(data, filename):
     """docstring for save"""
     file = os.path.join(work_dir(), filename)
+    
+    if not os.path.exists(os.path.dirname(file)):
+        os.makedirs(os.path.dirname(file))
+    
     with open(file, "w+") as jsonFile:
         json.dump(data, jsonFile)
     
