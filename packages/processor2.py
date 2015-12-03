@@ -3,18 +3,13 @@ from helper import updateStatus
 
 class processor(object):
     """docstring for processor"""
-    def __init__(self, gDriveObj, myFileHandler):
+    def __init__(self, userObj):
         super(processor, self).__init__()
 
-        self.fh = myFileHandler
-
-        self.files = self.fh.files
-        self.folders = self.fh.folders
-        self.newFiles = self.fh.newFiles
-        self.newFolders = self.fh.newFolders
-
         # used for lookup of parents title
-        self.gDriveObj = gDriveObj
+        self.user = userObj
+        self.files = {}
+        self.folders = {}
 
     def processFile(self, item):
         files = self.files
@@ -55,7 +50,7 @@ class processor(object):
                 print "Could not update folder", parentId, "with", parent
         else: # fetch info from API
             # print "Fetching info for", parentId
-            item = self.gDriveObj.file.fileGet(parentId)
+            item = self.user.file.fileGet(parentId)
             folders[parentId] = item
             
         self.folders = folders
@@ -97,7 +92,7 @@ class processor(object):
         
         print "\nDone."
         # save all changes
-        self.fh.writeFilesToDisk()
+        # self.fh.writeFilesToDisk()
 
         return (self.files, self.folders)
 

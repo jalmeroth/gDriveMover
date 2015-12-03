@@ -2,12 +2,12 @@
 from oauth2 import auth
 from helper import load, save
 from files import files
+from processor2 import processor
 
 # from auth import authorization
 # from perm import permissions
 # from files import files
 # from fileHandler import fileHandler
-# from processor import processor
 
 
 # shared object for filehandling
@@ -40,7 +40,8 @@ class user(object):
         else:
             pass
         
-        self.files = files(self)
+        self.file = files(self)
+        self.proc = processor(self)
         
         # self.auth = authorization(self)
         # self.perm = permissions(self)
